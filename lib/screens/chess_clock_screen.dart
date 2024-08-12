@@ -1,4 +1,3 @@
-// lib/screens/chess_clock_screen.dart
 import 'package:chess_clock/config/constant.dart';
 import 'package:chess_clock/widgets/controler_area.dart';
 import 'package:flutter/material.dart';
@@ -50,6 +49,65 @@ class _ChessClockScreenState extends State<ChessClockScreen>
   void _loadAudio() async {
     await _audioPlayer.setSource(AssetSource(AppConstants.CLICK_SOUND));
     await _tickPlayer.setSource(AssetSource(AppConstants.TICK_SOUND));
+  }
+
+  void _toggleTimer() {
+    setState(() {
+      _isRunning = !_isRunning;
+      if (_isRunning) {
+        _startTimer();
+      } else {
+        _stopTimer();
+      }
+    });
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(Duration(milliseconds: 10), (timer) {
+      setState(() {
+        if (_isPlayer1Turn) {
+          _player1Time -= 10;
+          if (_player1Time <= 10000 && _player1Time > 0) {
+            _playTickSound();
+          }
+        } else {
+          _player2Time -= 10;
+          if (_player2Time <= 10000 && _player2Time > 0) {
+            _playTickSound();
+          }
+        }
+        if (_player1Time <= 0 || _player2Time <= 0) {
+          _stopTimer();
+          _showGameOverDialog();
+        }
+      });
+    });
+  }
+
+  void _playTickSound() {
+    if (_tickPlayer.state != PlayerState.playing) {
+      _tickPlayer.resume();
+    }
+  }
+
+  void _stopTimer() {
+    _timer?.cancel();
+    _tickPlayer.stop();
+  }
+
+  void _switchTurn() {
+    if (!_isRunning) return;
+    setState(() {
+      _isPlayer1Turn = !_isPlayer1Turn;
+      if (_isPlayer1Turn) {
+        _player2Time += _increment;
+        _player2Moves++;
+      } else {
+        _player1Time += _increment;
+        _player1Moves++;
+      }
+    });
+    _audioPlayer.resume();
   }
 
   void _showSettingsDialog() {
@@ -159,68 +217,6 @@ class _ChessClockScreenState extends State<ChessClockScreen>
     );
   }
 
-  void _toggleTimer() {
-    setState(() {
-      _isRunning = !_isRunning;
-      if (_isRunning) {
-        _startTimer();
-      } else {
-        _stopTimer();
-      }
-    });
-  }
-
-  void _startTimer() {
-    _timer = Timer.periodic(Duration(milliseconds: 10), (timer) {
-      setState(() {
-        if (_isPlayer1Turn) {
-          _player1Time -= 10;
-          if (_player1Time <= 10000 && _player1Time > 0) {
-            _playTickSound();
-            // No need to call forward() as the animation is now continuous
-          }
-        } else {
-          _player2Time -= 10;
-          if (_player2Time <= 10000 && _player2Time > 0) {
-            _playTickSound();
-            // No need to call forward() as the animation is now continuous
-          }
-        }
-        if (_player1Time <= 0 || _player2Time <= 0) {
-          _stopTimer();
-          _showGameOverDialog();
-        }
-      });
-    });
-  }
-
-  void _playTickSound() {
-    if (_tickPlayer.state != PlayerState.playing) {
-      _tickPlayer.resume();
-    }
-  }
-
-  void _stopTimer() {
-    _timer?.cancel();
-    _tickPlayer.stop();
-    // No need to reset animation controllers here
-  }
-
-  void _switchTurn() {
-    if (!_isRunning) return;
-    setState(() {
-      _isPlayer1Turn = !_isPlayer1Turn;
-      if (_isPlayer1Turn) {
-        _player2Time += _increment;
-        _player2Moves++;
-      } else {
-        _player1Time += _increment;
-        _player1Moves++;
-      }
-    });
-    _audioPlayer.resume();
-  }
-
   void _showGameOverDialog() {
     String winner = _player1Time <= 0 ? _player2Name : _player1Name;
     showDialog(
@@ -269,9 +265,11 @@ class _ChessClockScreenState extends State<ChessClockScreen>
               isActive: _isRunning && !_isPlayer1Turn,
               textColor: AppConstants.LIGHT_PLAYER_COLOR,
               backgroundColor: AppConstants.DARK_PLAYER_COLOR,
+              highlightColor: AppConstants.HIGHLIGHT_COLOR,
               isLowTime: _player2Time <= 10000,
               animation: _player2AnimationController,
               onTap: () => _isRunning && !_isPlayer1Turn ? _switchTurn() : null,
+              isTopPlayer: true,
             ),
           ),
           ControlArea(
@@ -291,9 +289,11 @@ class _ChessClockScreenState extends State<ChessClockScreen>
               isActive: _isRunning && _isPlayer1Turn,
               textColor: AppConstants.DARK_PLAYER_COLOR,
               backgroundColor: AppConstants.LIGHT_PLAYER_COLOR,
+              highlightColor: AppConstants.HIGHLIGHT_COLOR,
               isLowTime: _player1Time <= 10000,
               animation: _player1AnimationController,
               onTap: () => _isRunning && _isPlayer1Turn ? _switchTurn() : null,
+              isTopPlayer: false,
             ),
           ),
         ],

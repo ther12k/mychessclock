@@ -1,4 +1,3 @@
-
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -10,7 +9,9 @@ class AppConstants {
   static const Color DARK_PLAYER_COLOR = Color(0xFF1F1F1F);
   static const Color LIGHT_PLAYER_COLOR = Color(0xFFF5E6D3);
   static const Color CONTROL_AREA_COLOR = Color(0xFFE0E0E0);
-  
+
+  static const Color HIGHLIGHT_COLOR = Color(0xFFFFD700);
+
   static const List<Map<String, dynamic>> FIDE_TIME_CONTROLS = [
     {'name': 'Bullet', 'time': 60000, 'increment': 0},
     {'name': 'Blitz', 'time': 180000, 'increment': 2000},

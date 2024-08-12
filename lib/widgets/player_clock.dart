@@ -1,5 +1,5 @@
-// lib/widgets/player_clock.dart
 import 'package:flutter/material.dart';
+import 'package:neon_widgets/neon_widgets.dart';
 
 class PlayerClock extends StatelessWidget {
   final String playerName;
@@ -7,9 +7,11 @@ class PlayerClock extends StatelessWidget {
   final bool isActive;
   final Color backgroundColor;
   final Color textColor;
+  final Color highlightColor;
   final bool isLowTime;
   final Animation<double> animation;
   final VoidCallback onTap;
+  final bool isTopPlayer;
 
   const PlayerClock({
     Key? key,
@@ -18,9 +20,11 @@ class PlayerClock extends StatelessWidget {
     required this.isActive,
     required this.backgroundColor,
     required this.textColor,
+    required this.highlightColor,
     required this.isLowTime,
     required this.animation,
     required this.onTap,
+    required this.isTopPlayer,
   }) : super(key: key);
 
   @override
@@ -30,73 +34,60 @@ class PlayerClock extends StatelessWidget {
       child: AnimatedBuilder(
         animation: animation,
         builder: (context, child) {
-          return Stack(
-            children: [
-              Container(
-                color: backgroundColor,
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        playerName,
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: isActive ? textColor : textColor.withOpacity(0.5),
-                        ),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        textBaseline: TextBaseline.alphabetic,
-                        children: [
-                          Text(
-                            _formatMainTime(time),
-                            style: TextStyle(
-                              fontSize: 72,
-                              fontWeight: FontWeight.bold,
-                              color: isActive ? textColor : textColor.withOpacity(0.5),
-                            ),
-                          ),
-                          Text(
-                            _formatMilliseconds(time),
-                            style: TextStyle(
-                              fontSize: 36,
-                              fontWeight: FontWeight.bold,
-                              color: isActive ? textColor : textColor.withOpacity(0.5),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+          return Container(
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              border: Border.all(
+                color: isActive ? highlightColor : Colors.transparent,
+                width: 4,
               ),
-              if (isLowTime)
-                Positioned.fill(
-                  child: AnimatedBuilder(
-                    animation: animation,
-                    builder: (context, child) {
-                      return Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Colors.red.withOpacity(animation.value),
-                            width: 8,
-                          ),
+            ),
+            child: Stack(
+              children: [
+                Center(
+                  child: Transform.rotate(
+                    angle: isTopPlayer ? 3.14159 : 0, // Rotate 180 degrees if top player
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        NeonText(
+                          text: _formatMainTime(time),
+                          textColor: isActive ? highlightColor : textColor,
+                          blurRadius: isActive ? 20 : 0,
+                          spreadColor: isActive ? highlightColor : Colors.transparent,
+                          // blurStyle: BlurStyle.outer,
+                          textSize: 72,
+                          fontWeight: FontWeight.bold,
+                          // flickerTimeInMilliSeconds: isLowTime ? 500 : 0,
                         ),
-                        child: Center(
-                          child: Icon(
-                            Icons.warning_amber_rounded,
-                            color: Colors.red.withOpacity(animation.value),
-                            size: 100,
-                          ),
+                        SizedBox(height: 8), // Add some space between main time and milliseconds
+                        NeonText(
+                          text: _formatMilliseconds(time),
+                          textColor: isActive ? highlightColor : textColor,
+                          blurRadius: isActive ? 10 : 0,
+                          spreadColor: isActive ? highlightColor : Colors.transparent,
+                          // blurStyle: BlurStyle.outer,
+                          textSize: 36,
+                          fontWeight: FontWeight.bold,
+                          // flickerTimeInMilliSeconds: isLowTime ? 500 : 0,
                         ),
-                      );
-                    },
+                      ],
+                    ),
                   ),
                 ),
-            ],
+                if (isLowTime)
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: Colors.red.withOpacity(animation.value),
+                          width: 4,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           );
         },
       ),
