@@ -4,7 +4,7 @@ import '../models/game_settings.dart';
 class GameModeSelector extends StatefulWidget {
   final Function(GameSettings) onSettingsSelected;
 
-  GameModeSelector({required this.onSettingsSelected});
+  const GameModeSelector({Key? key, required this.onSettingsSelected}) : super(key: key);
 
   @override
   _GameModeSelectorState createState() => _GameModeSelectorState();
@@ -12,143 +12,148 @@ class GameModeSelector extends StatefulWidget {
 
 class _GameModeSelectorState extends State<GameModeSelector> {
   String _selectedMode = 'Rapid';
+  String _whitePlayerName = '';
+  String _blackPlayerName = '';
   int _customMinutes = 10;
-  int _customIncrement = 5;
-  String _player1Name = 'Player 1';
-  String _player2Name = 'Player 2';
-  String _selectedSound = 'Classic';
+  int _customIncrement = 0;
 
-  final List<String> _soundOptions = ['Classic', 'Digital', 'Wood'];
+  final List<String> _gameModes = ['Bullet', 'Blitz', 'Rapid', 'Classical', 'Custom Time'];
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text('Chess Clock Pro', style: Theme.of(context).textTheme.titleLarge),
-        SizedBox(height: 24),
-        DropdownButton<String>(
-          value: _selectedMode,
-          items: ['Bullet', 'Blitz', 'Rapid', 'Classical', 'Custom']
-              .map((String value) {
-            return DropdownMenuItem<String>(
-              value: value,
-              child: Text(value),
-            );
-          }).toList(),
-          onChanged: (String? newValue) {
-            setState(() {
-              _selectedMode = newValue!;
-            });
-          },
-        ),
-        SizedBox(height: 16),
-        if (_selectedMode == 'Custom') ...[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Minutes:'),
-              SizedBox(
-                width: 100,
-                child: TextField(
-                  keyboardType: TextInputType.number,
-                  onChanged: (value) =>
-                      _customMinutes = int.tryParse(value) ?? 10,
-                ),
-              ),
-            ],
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Game Settings',
+            style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 16),
+          _buildPlayerNameInput(
+            hintText: 'White Player Name',
+            onChanged: (value) => setState(() => _whitePlayerName = value),
           ),
           SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Increment:'),
-              SizedBox(
-                width: 100,
-                child: TextField(
-                  keyboardType: TextInputType.number,
-                  onChanged: (value) =>
-                      _customIncrement = int.tryParse(value) ?? 5,
-                ),
-              ),
-            ],
+          _buildPlayerNameInput(
+            hintText: 'Black Player Name',
+            onChanged: (value) => setState(() => _blackPlayerName = value),
           ),
+          SizedBox(height: 16),
+          ..._gameModes.map((mode) => _buildModeButton(mode)),
+          if (_selectedMode == 'Custom Time') ...[
+            SizedBox(height: 8),
+            _buildCustomTimeInputs(),
+          ],
         ],
-        SizedBox(height: 16),
-        TextField(
-          decoration: InputDecoration(labelText: 'Player 1 Name'),
-          onChanged: (value) => _player1Name = value,
+      ),
+    );
+  }
+
+  Widget _buildPlayerNameInput({required String hintText, required Function(String) onChanged}) {
+    return TextField(
+      style: TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        hintText: hintText,
+        hintStyle: TextStyle(color: Colors.grey[400]),
+        filled: true,
+        fillColor: Colors.grey[800],
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
         ),
-        SizedBox(height: 8),
-        TextField(
-          decoration: InputDecoration(labelText: 'Player 2 Name'),
-          onChanged: (value) => _player2Name = value,
+      ),
+      onChanged: onChanged,
+    );
+  }
+
+  Widget _buildModeButton(String mode) {
+    bool isSelected = _selectedMode == mode;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: ElevatedButton(
+        child: Text(mode),
+        style: ElevatedButton.styleFrom(
+          foregroundColor: Colors.white, backgroundColor: isSelected ? Colors.blue : Colors.grey[700],
+          padding: EdgeInsets.symmetric(vertical: 12),
+          textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
-        SizedBox(height: 16),
-        DropdownButton<String>(
-          value: _selectedSound,
-          items: _soundOptions.map((String value) {
-            return DropdownMenuItem<String>(
-              value: value,
-              child: Text(value),
-            );
-          }).toList(),
-          onChanged: (String? newValue) {
-            setState(() {
-              _selectedSound = newValue!;
-            });
-          },
+        onPressed: () => setState(() => _selectedMode = mode),
+      ),
+    );
+  }
+
+  Widget _buildCustomTimeInputs() {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            style: TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              hintText: 'Minutes',
+              hintStyle: TextStyle(color: Colors.grey[400]),
+              filled: true,
+              fillColor: Colors.grey[800],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            keyboardType: TextInputType.number,
+            onChanged: (value) => setState(() => _customMinutes = int.tryParse(value) ?? 10),
+          ),
         ),
-        SizedBox(height: 24),
-        ElevatedButton(
-          child: Text('Start Game'),
-          onPressed: () {
-            GameSettings settings = GameSettings(
-              mode: _selectedMode,
-              initialTime: _selectedMode == 'Custom'
-                  ? _customMinutes * 60
-                  : _getInitialTime(_selectedMode),
-              increment: _selectedMode == 'Custom'
-                  ? _customIncrement
-                  : _getIncrement(_selectedMode),
-              player1Name: _player1Name,
-              player2Name: _player2Name,
-              soundEffect: _selectedSound,
-            );
-            widget.onSettingsSelected(settings);
-          },
+        SizedBox(width: 8),
+        Expanded(
+          child: TextField(
+            style: TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              hintText: 'Increment',
+              hintStyle: TextStyle(color: Colors.grey[400]),
+              filled: true,
+              fillColor: Colors.grey[800],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            keyboardType: TextInputType.number,
+            onChanged: (value) => setState(() => _customIncrement = int.tryParse(value) ?? 0),
+          ),
         ),
       ],
     );
   }
 
+  // Helper methods for time settings (unchanged)
   int _getInitialTime(String mode) {
     switch (mode) {
-      case 'Bullet':
-        return 60;
-      case 'Blitz':
-        return 180;
-      case 'Rapid':
-        return 600;
-      case 'Classical':
-        return 5400;
-      default:
-        return 600;
+      case 'Bullet': return 60;
+      case 'Blitz': return 180;
+      case 'Rapid': return 600;
+      case 'Classical': return 5400;
+      case 'Custom Time': return _customMinutes * 60;
+      default: return 600;
     }
   }
 
   int _getIncrement(String mode) {
     switch (mode) {
-      case 'Bullet':
-        return 0;
-      case 'Blitz':
-        return 2;
-      case 'Rapid':
-        return 5;
-      case 'Classical':
-        return 30;
-      default:
-        return 5;
+      case 'Bullet': return 0;
+      case 'Blitz': return 2;
+      case 'Rapid': return 5;
+      case 'Classical': return 30;
+      case 'Custom Time': return _customIncrement;
+      default: return 5;
     }
   }
 }

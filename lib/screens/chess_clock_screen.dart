@@ -1,9 +1,11 @@
 import 'package:chess_clock/config/constant.dart';
 import 'package:chess_clock/widgets/controler_area.dart';
+import 'package:chess_clock/widgets/gameover_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'dart:async';
 import '../widgets/player_clock.dart';
+import 'dart:math' as math; 
 
 class ChessClockScreen extends StatefulWidget {
   @override
@@ -74,12 +76,12 @@ class _ChessClockScreenState extends State<ChessClockScreen>
         _lastElapsedTime = elapsedTime;
 
         if (_isPlayer1Turn) {
-          _player1Time -= deltaTime;
+          _player1Time = math.max(0, _player1Time - deltaTime);
           if (_player1Time <= 10000 && _player1Time > 0) {
             _playTickSound();
           }
         } else {
-          _player2Time -= deltaTime;
+          _player2Time = math.max(0, _player2Time - deltaTime);
           if (_player2Time <= 10000 && _player2Time > 0) {
             _playTickSound();
           }
@@ -234,19 +236,13 @@ class _ChessClockScreenState extends State<ChessClockScreen>
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Game Over'),
-          content: Text('$winner wins!'),
-          actions: <Widget>[
-            TextButton(
-              child: Text('New Game'),
-              onPressed: () {
-                Navigator.of(context).pop();
-                _resetGame();
-                _showSettingsDialog();
-              },
-            ),
-          ],
+        return GameOverDialog(
+          winner: winner,
+          onNewGame: () {
+            Navigator.of(context).pop();
+            _resetGame();
+            _showSettingsDialog();
+          },
         );
       },
     );
