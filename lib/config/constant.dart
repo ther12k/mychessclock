@@ -10,7 +10,8 @@ class AppConstants {
   static const Color LIGHT_PLAYER_COLOR = Color(0xFFF5E6D3);
   static const Color CONTROL_AREA_COLOR = Color(0xFFE0E0E0);
 
-  static const Color HIGHLIGHT_COLOR = Color(0xFFFFD700);
+  // Updated HIGHLIGHT_COLOR for better contrast
+  static const Color HIGHLIGHT_COLOR = Color(0xFFFFA500); // Bright orange
 
   static const List<Map<String, dynamic>> FIDE_TIME_CONTROLS = [
     {'name': 'Bullet', 'time': 60000, 'increment': 0},
