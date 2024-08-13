@@ -12,6 +12,8 @@ class ChessClockScreen extends StatefulWidget {
 
 class _ChessClockScreenState extends State<ChessClockScreen>
     with TickerProviderStateMixin {
+  late Stopwatch _stopwatch;
+  int _lastElapsedTime = 0;
   String _player1Name = 'White';
   String _player2Name = 'Black';
   late int _player1Time;
@@ -42,6 +44,7 @@ class _ChessClockScreenState extends State<ChessClockScreen>
       vsync: this,
       duration: Duration(milliseconds: 500),
     )..repeat(reverse: true);
+    _stopwatch = Stopwatch();
     _loadAudio();
     WidgetsBinding.instance.addPostFrameCallback((_) => _showSettingsDialog());
   }
@@ -63,15 +66,20 @@ class _ChessClockScreenState extends State<ChessClockScreen>
   }
 
   void _startTimer() {
+    _stopwatch.start();
     _timer = Timer.periodic(Duration(milliseconds: 10), (timer) {
       setState(() {
+        int elapsedTime = _stopwatch.elapsedMilliseconds;
+        int deltaTime = elapsedTime - _lastElapsedTime;
+        _lastElapsedTime = elapsedTime;
+
         if (_isPlayer1Turn) {
-          _player1Time -= 10;
+          _player1Time -= deltaTime;
           if (_player1Time <= 10000 && _player1Time > 0) {
             _playTickSound();
           }
         } else {
-          _player2Time -= 10;
+          _player2Time -= deltaTime;
           if (_player2Time <= 10000 && _player2Time > 0) {
             _playTickSound();
           }
@@ -84,15 +92,18 @@ class _ChessClockScreenState extends State<ChessClockScreen>
     });
   }
 
+  void _stopTimer() {
+    _timer?.cancel();
+    _stopwatch.stop();
+    _stopwatch.reset();
+    _lastElapsedTime = 0;
+    _tickPlayer.stop();
+  }
+
   void _playTickSound() {
     if (_tickPlayer.state != PlayerState.playing) {
       _tickPlayer.resume();
     }
-  }
-
-  void _stopTimer() {
-    _timer?.cancel();
-    _tickPlayer.stop();
   }
 
   void _switchTurn() {
